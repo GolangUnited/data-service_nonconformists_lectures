@@ -16,53 +16,56 @@ service Lecture {
 }
 
 message CreateRequest {
-   string CreatedBy = 1;
-   string CourseId = 2; 
-   uint32 Number = 3;
-   string Title = 4;
-   string Description = 5;
+   string course_id = 1; 
+   uint64 number = 2;
+   string title = 3;
+   string description = 4;
+   string created_by = 5;
 }
 
 message CreateResponse {
-   string Id = 1;
+   string id = 1;
 }
 
 message GetRequest {
-    string Id = 1;
+    string id = 1;
 }
 
 message GetResponse {
-   string Id = 1;
-   string CourseId = 2;
-   uint32 Number = 3;
-   string Title = 4;
-   string Description = 5;
-   string CreatedBy = 6;
-   google.protobuf.Timestamp CreatedAt = 7;
-   string ChangedBy = 8;
-   google.protobuf.Timestamp ChangedAt = 9;
-   string DeletedBy = 10;
-   google.protobuf.Timestamp DeletedAt = 11;
+   string id = 1;
+   string course_id = 2;
+   uint64 number = 3;
+   string title = 4;
+   string description = 5;
+   string created_by = 6;
+   google.protobuf.Timestamp created_at = 7;
+   string updated_by = 8;
+   google.protobuf.Timestamp updated_at = 9;
+   string deleted_by = 10;
+   google.protobuf.Timestamp deleted_at = 11;
 }
 
 message UpdateRequest {
-   string ChangedBy = 1;
-   string Id = 2;
-   string CourseId = 3;
-   uint32 Number = 4;
-   string Title = 5;
-   string Description = 6;
+   string id = 1;
+   string course_id = 2;
+   uint64 number = 3;
+   string title = 4;
+   string description = 5;
+   string updated_by = 6;
  }
 
  message DeleteRequest {
-   string DeletedBy = 1;
-   string Id = 2;
+   string id = 1;
+   string deleted_by = 2;
  }
 
 message GetListRequest {
-   string CourseId = 1;
+   string course_id = 1;
+   bool show_deleted = 2;
+   uint32 limit = 3;
+   uint32 offset = 4;
 }
 
 message GetListResponse {
-   repeated GetResponse Lectures = 1;
+   repeated GetResponse lectures = 1;
 }

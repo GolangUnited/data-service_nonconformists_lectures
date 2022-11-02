@@ -12,38 +12,47 @@ import (
 	"google.golang.org/grpc"
 )
 
+const protocol_tcp = "tcp"
+const port_8080 = ":8080"
+
 func main() {
 
-	db_host := os.Getenv("LECTURES_DB_HOST")
-	db_port := os.Getenv("LECTURES_DB_PORT")
-	db_user := os.Getenv("LECTURES_DB_USER")
-	db_password := os.Getenv("LECTURES_DB_PASSWORD")
-	db_name := os.Getenv("LECTURES_DB_NAME")
+	dbHost := os.Getenv("LECTURES_DB_HOST")
+	dbPort := os.Getenv("LECTURES_DB_PORT")
+	dbUser := os.Getenv("LECTURES_DB_USER")
+	dbPassword := os.Getenv("LECTURES_DB_PASSWORD")
+	dbName := os.Getenv("LECTURES_DB_NAME")
 
-	db, err := database.New(db_host, db_port, db_user, db_password, db_name)
+	err := database.New(dbHost, dbPort, dbUser, dbPassword, dbName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer db.Close()
-
-	err = db.AutoMigrate(&models.Lecture{})
+	sqlDB, err := database.DB.DB()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s := grpc.NewServer()
+	defer sqlDB.Close()
 
-	lecture := &lecture.Lecture{}
-
-	api.RegisterLectureServer(s, lecture)
-
-	l, err := net.Listen("tcp", ":8080")
+	err = database.DB.AutoMigrate(&models.Lecture{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := s.Serve(l); err != nil {
+	grpcServer := grpc.NewServer()
+
+	lectureServer := &lecture.Lecture{}
+
+	api.RegisterLectureServer(grpcServer, lectureServer)
+
+	listener, err := net.Listen(protocol_tcp, port_8080)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = grpcServer.Serve(listener)
+	if err != nil {
 		log.Fatal(err)
 	}
 

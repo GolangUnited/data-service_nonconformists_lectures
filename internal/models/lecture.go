@@ -1,94 +1,106 @@
 package models
 
 import (
+	"errors"
 	"golang-united-lectures/internal/database"
+	"log"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Lecture struct {
 	Id          string `gorm:"primarykey"`
 	CourseId    string `gorm:"index"`
-	Number      uint32
+	Number      uint64
 	Title       string
 	Description string
 	CreatedAt   time.Time
 	CreatedBy   string
-	ChangedAt   time.Time
-	ChangedBy   string
-	DeletedAt   time.Time
+	UpdatedAt   time.Time `gorm:"default:null"`
+	UpdatedBy   string
+	DeletedAt   time.Time `gorm:"default:null"`
 	DeletedBy   string
 }
 
-func (l *Lecture) Save() error {
+func CreateLecture(lecture *Lecture) error {
 
-	db := database.GetInstance()
-
-	var exists bool
-
-	err := db.Client.Model(l).Select("count(*) > 0").Where("id = ?", l.Id).Find(&exists).Error
+	err := database.DB.Create(lecture).Error
 	if err != nil {
-		return err
-	}
-
-	if exists {
-		err = db.Client.Updates(l).Error
-	} else {
-		err = db.Client.Create(l).Error
-	}
-
-	if err != nil {
-		return err
+		log.Printf("Error on create lecture: %s", err.Error())
+		return errors.New("DB error")
 	}
 
 	return nil
 
 }
 
-func NewLecture() *Lecture {
+func UpdateLecture(lecture *Lecture) error {
 
-	lecture := &Lecture{}
+	err := database.DB.Updates(lecture).Error
+	if err != nil {
+		log.Printf("Error on update lecture: %s", err.Error())
+		return errors.New("DB error")
+	}
 
-	lecture.Id = uuid.New().String()
-	lecture.CreatedAt = time.Now()
+	return nil
 
-	return lecture
+}
+
+func DeleteLecture(lecture *Lecture) error {
+
+	err := database.DB.Delete(lecture).Error
+	if err != nil {
+		log.Printf("Error on delete lecture: %s", err.Error())
+		return errors.New("DB error")
+	}
+
+	return nil
 
 }
 
 func GetLecture(id string) (*Lecture, error) {
 
-	db := database.GetInstance()
-
 	lecture := Lecture{}
 
-	err := db.Client.First(&lecture, "id = ?", id).Error
+	err := database.DB.First(&lecture, "id = ?", id).Error
 	if err != nil {
-		return nil, err
+		log.Printf("Error on select lecture Id = %s: %s", id, err.Error())
+		return nil, errors.New("DB error")
 	}
 
 	return &lecture, nil
 
 }
 
-func GetLectureList(CourseId string) ([]Lecture, error) {
-
-	db := database.GetInstance()
+func GetLectureList(courseId string, showDeleted bool, limit uint32, offset uint32) (*[]Lecture, error) {
 
 	lectures := []Lecture{}
 
-	var err error
+	query := database.DB.Model(&Lecture{})
 
-	if CourseId == "" {
-		err = db.Client.Find(&lectures).Error
-	} else {
-		err = db.Client.Where("course_id = ?", CourseId).Find(&lectures).Error
+	if limit > 0 {
+		query.Limit(int(limit))
 	}
+
+	if offset > 0 {
+		query.Offset(int(offset))
+	}
+
+	if courseId != "" {
+		query.Where("course_id = ?", courseId)
+	}
+
+	if !showDeleted {
+		query.Where("deleted_at IS NULL")
+	}
+
+	query.Order("created_at asc")
+
+	err := query.Find(&lectures).Error
 	if err != nil {
-		return nil, err
+		log.Printf("Error on get list of lectures: %s", err.Error())
+		return nil, errors.New("DB error")
 	}
 
-	return lectures, nil
+	return &lectures, nil
 
 }

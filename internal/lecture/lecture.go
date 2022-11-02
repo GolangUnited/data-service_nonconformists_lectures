@@ -2,11 +2,13 @@ package lecture
 
 import (
 	"context"
-	"errors"
 	"golang-united-lectures/internal/api"
 	"golang-united-lectures/internal/models"
 	"time"
 
+	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -17,17 +19,18 @@ type Lecture struct {
 
 func (l *Lecture) Create(ctx context.Context, request *api.CreateRequest) (*api.CreateResponse, error) {
 
-	lecture := models.NewLecture()
+	lecture := &models.Lecture{
+		Id:          uuid.New().String(),
+		CourseId:    request.GetCourseId(),
+		Number:      request.GetNumber(),
+		Title:       request.GetTitle(),
+		Description: request.GetDescription(),
+		CreatedBy:   request.GetCreatedBy(),
+	}
 
-	lecture.CourseId = request.GetCourseId()
-	lecture.Number = request.GetNumber()
-	lecture.Title = request.GetTitle()
-	lecture.Description = request.GetDescription()
-	lecture.CreatedBy = request.GetCreatedBy()
-
-	err := lecture.Save()
+	err := models.CreateLecture(lecture)
 	if err != nil {
-		return nil, err
+		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
 
 	return &api.CreateResponse{Id: lecture.Id}, nil
@@ -38,33 +41,33 @@ func (l *Lecture) Get(ctx context.Context, request *api.GetRequest) (*api.GetRes
 
 	lecture, err := models.GetLecture(request.GetId())
 	if err != nil {
-		return nil, err
+		return nil, status.New(codes.NotFound, err.Error()).Err()
 	}
 
-	response := api.GetResponse{}
-
-	response.Id = lecture.Id
-	response.CourseId = lecture.CourseId
-	response.Number = lecture.Number
-	response.Title = lecture.Title
-	response.Description = lecture.Description
+	response := &api.GetResponse{
+		Id:          lecture.Id,
+		CourseId:    lecture.CourseId,
+		Number:      lecture.Number,
+		Title:       lecture.Title,
+		Description: lecture.Description,
+		CreatedBy:   lecture.CreatedBy,
+		UpdatedBy:   lecture.UpdatedBy,
+		DeletedBy:   lecture.DeletedBy,
+	}
 
 	if !lecture.CreatedAt.IsZero() {
 		response.CreatedAt = timestamppb.New(lecture.CreatedAt)
-		response.CreatedBy = lecture.CreatedBy
 	}
 
-	if !lecture.ChangedAt.IsZero() {
-		response.ChangedAt = timestamppb.New(lecture.ChangedAt)
-		response.ChangedBy = lecture.ChangedBy
+	if !lecture.UpdatedAt.IsZero() {
+		response.UpdatedAt = timestamppb.New(lecture.UpdatedAt)
 	}
 
 	if !lecture.DeletedAt.IsZero() {
 		response.DeletedAt = timestamppb.New(lecture.DeletedAt)
-		response.DeletedBy = lecture.DeletedBy
 	}
 
-	return &response, nil
+	return response, nil
 
 }
 
@@ -72,23 +75,21 @@ func (l *Lecture) Update(ctx context.Context, request *api.UpdateRequest) (*empt
 
 	lecture, err := models.GetLecture(request.GetId())
 	if err != nil {
-		return nil, err
+		return nil, status.New(codes.NotFound, err.Error()).Err()
 	}
 
 	if !lecture.DeletedAt.IsZero() {
-		err = errors.New("lecture is deleted")
-		return nil, err
+		return nil, status.New(codes.Aborted, "lecture is deleted").Err()
 	}
 
 	lecture.Number = request.GetNumber()
 	lecture.Title = request.GetTitle()
 	lecture.Description = request.GetDescription()
-	lecture.ChangedAt = time.Now()
-	lecture.ChangedBy = request.GetChangedBy()
+	lecture.UpdatedBy = request.GetUpdatedBy()
 
-	err = lecture.Save()
+	err = models.UpdateLecture(lecture)
 	if err != nil {
-		return nil, err
+		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
 
 	return &emptypb.Empty{}, nil
@@ -99,20 +100,19 @@ func (l *Lecture) Delete(ctx context.Context, request *api.DeleteRequest) (*empt
 
 	lecture, err := models.GetLecture(request.GetId())
 	if err != nil {
-		return nil, err
+		return nil, status.New(codes.NotFound, err.Error()).Err()
 	}
 
 	if !lecture.DeletedAt.IsZero() {
-		err = errors.New("lecture is deleted")
-		return nil, err
+		return nil, status.New(codes.Aborted, "lecture is deleted").Err()
 	}
 
 	lecture.DeletedAt = time.Now()
 	lecture.DeletedBy = request.GetDeletedBy()
 
-	err = lecture.Save()
+	err = models.UpdateLecture(lecture)
 	if err != nil {
-		return nil, err
+		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
 
 	return &emptypb.Empty{}, nil
@@ -121,43 +121,41 @@ func (l *Lecture) Delete(ctx context.Context, request *api.DeleteRequest) (*empt
 
 func (l *Lecture) GetList(ctx context.Context, request *api.GetListRequest) (*api.GetListResponse, error) {
 
-	lectures, err := models.GetLectureList(request.GetCourseId())
+	lectures, err := models.GetLectureList(request.GetCourseId(), request.GetShowDeleted(), request.GetLimit(), request.GetOffset())
 	if err != nil {
-		return nil, err
+		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
 
 	response := &api.GetListResponse{}
 
-	for _, lecture := range lectures {
+	response.Lectures = make([]*api.GetResponse, 0, len(*lectures))
 
-		if !lecture.DeletedAt.IsZero() {
-			continue
+	for _, lecture := range *lectures {
+
+		lercureResponse := &api.GetResponse{
+			Id:          lecture.Id,
+			CourseId:    lecture.CourseId,
+			Number:      lecture.Number,
+			Title:       lecture.Title,
+			Description: lecture.Description,
+			CreatedBy:   lecture.CreatedBy,
+			UpdatedBy:   lecture.UpdatedBy,
+			DeletedBy:   lecture.DeletedBy,
 		}
-
-		lercureResponse := api.GetResponse{}
-
-		lercureResponse.Id = lecture.Id
-		lercureResponse.CourseId = lecture.CourseId
-		lercureResponse.Number = lecture.Number
-		lercureResponse.Title = lecture.Title
-		lercureResponse.Description = lecture.Description
 
 		if !lecture.CreatedAt.IsZero() {
 			lercureResponse.CreatedAt = timestamppb.New(lecture.CreatedAt)
-			lercureResponse.CreatedBy = lecture.CreatedBy
 		}
 
-		if !lecture.ChangedAt.IsZero() {
-			lercureResponse.ChangedAt = timestamppb.New(lecture.ChangedAt)
-			lercureResponse.ChangedBy = lecture.ChangedBy
-		}
+		// if !lecture.UpdatedAt.IsZero() {
+		lercureResponse.UpdatedAt = timestamppb.New(lecture.UpdatedAt)
+		// }
 
 		if !lecture.DeletedAt.IsZero() {
 			lercureResponse.DeletedAt = timestamppb.New(lecture.DeletedAt)
-			lercureResponse.DeletedBy = lecture.DeletedBy
 		}
 
-		response.Lectures = append(response.Lectures, &lercureResponse)
+		response.Lectures = append(response.Lectures, lercureResponse)
 
 	}
 

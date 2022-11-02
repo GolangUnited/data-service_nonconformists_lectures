@@ -1,51 +1,23 @@
 package database
 
 import (
+	"fmt"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type database struct {
-	Client *gorm.DB
-}
+var DB *gorm.DB
 
-var db database
+func New(host, port, user, password, name string) error {
 
-func New(host, port, user, password, name string) (*database, error) {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s database=%s sslmode=disable TimeZone=Europe/Moscow", host, port, user, password, name)
 
-	dsn := "host=" + host + " port=" + port + " user=" + user + " password=" + password + " database=" + name + " sslmode=disable TimeZone=Europe/Moscow"
-
-	client, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
-	if err != nil {
-		return nil, err
-	}
-
-	db = database{
-		Client: client,
-	}
-
-	return &db, nil
-
-}
-
-func GetInstance() *database {
-	return &db
-}
-
-func (d *database) AutoMigrate(i ...interface{}) error {
-	return d.Client.AutoMigrate(i...)
-}
-
-func (d *database) Close() error {
-
-	db, err := d.Client.DB()
-
+	var err error
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return err
 	}
-
-	db.Close()
 
 	return nil
 
