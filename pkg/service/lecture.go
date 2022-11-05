@@ -1,9 +1,9 @@
-package lecture
+package service
 
 import (
 	"context"
-	"golang-united-lectures/internal/api"
-	"golang-united-lectures/internal/models"
+	"golang-united-lectures/pkg/api"
+	"golang-united-lectures/pkg/repositories"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,16 +19,17 @@ type Lecture struct {
 
 func (l *Lecture) Create(ctx context.Context, request *api.CreateRequest) (*api.CreateResponse, error) {
 
-	lecture := &models.Lecture{
+	lecture := &repositories.Lecture{
 		Id:          uuid.New().String(),
 		CourseId:    request.GetCourseId(),
 		Number:      request.GetNumber(),
 		Title:       request.GetTitle(),
 		Description: request.GetDescription(),
 		CreatedBy:   request.GetCreatedBy(),
+		UpdatedBy:   request.GetCreatedBy(),
 	}
 
-	err := models.CreateLecture(lecture)
+	err := repositories.CreateLecture(lecture)
 	if err != nil {
 		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
@@ -39,7 +40,7 @@ func (l *Lecture) Create(ctx context.Context, request *api.CreateRequest) (*api.
 
 func (l *Lecture) Get(ctx context.Context, request *api.GetRequest) (*api.GetResponse, error) {
 
-	lecture, err := models.GetLecture(request.GetId())
+	lecture, err := repositories.GetLecture(request.GetId())
 	if err != nil {
 		return nil, status.New(codes.NotFound, err.Error()).Err()
 	}
@@ -53,14 +54,8 @@ func (l *Lecture) Get(ctx context.Context, request *api.GetRequest) (*api.GetRes
 		CreatedBy:   lecture.CreatedBy,
 		UpdatedBy:   lecture.UpdatedBy,
 		DeletedBy:   lecture.DeletedBy,
-	}
-
-	if !lecture.CreatedAt.IsZero() {
-		response.CreatedAt = timestamppb.New(lecture.CreatedAt)
-	}
-
-	if !lecture.UpdatedAt.IsZero() {
-		response.UpdatedAt = timestamppb.New(lecture.UpdatedAt)
+		CreatedAt:   timestamppb.New(lecture.CreatedAt),
+		UpdatedAt:   timestamppb.New(lecture.UpdatedAt),
 	}
 
 	if !lecture.DeletedAt.IsZero() {
@@ -73,7 +68,7 @@ func (l *Lecture) Get(ctx context.Context, request *api.GetRequest) (*api.GetRes
 
 func (l *Lecture) Update(ctx context.Context, request *api.UpdateRequest) (*emptypb.Empty, error) {
 
-	lecture, err := models.GetLecture(request.GetId())
+	lecture, err := repositories.GetLecture(request.GetId())
 	if err != nil {
 		return nil, status.New(codes.NotFound, err.Error()).Err()
 	}
@@ -87,7 +82,7 @@ func (l *Lecture) Update(ctx context.Context, request *api.UpdateRequest) (*empt
 	lecture.Description = request.GetDescription()
 	lecture.UpdatedBy = request.GetUpdatedBy()
 
-	err = models.UpdateLecture(lecture)
+	err = repositories.UpdateLecture(lecture)
 	if err != nil {
 		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
@@ -98,7 +93,7 @@ func (l *Lecture) Update(ctx context.Context, request *api.UpdateRequest) (*empt
 
 func (l *Lecture) Delete(ctx context.Context, request *api.DeleteRequest) (*emptypb.Empty, error) {
 
-	lecture, err := models.GetLecture(request.GetId())
+	lecture, err := repositories.GetLecture(request.GetId())
 	if err != nil {
 		return nil, status.New(codes.NotFound, err.Error()).Err()
 	}
@@ -110,7 +105,7 @@ func (l *Lecture) Delete(ctx context.Context, request *api.DeleteRequest) (*empt
 	lecture.DeletedAt = time.Now()
 	lecture.DeletedBy = request.GetDeletedBy()
 
-	err = models.UpdateLecture(lecture)
+	err = repositories.UpdateLecture(lecture)
 	if err != nil {
 		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
@@ -121,7 +116,7 @@ func (l *Lecture) Delete(ctx context.Context, request *api.DeleteRequest) (*empt
 
 func (l *Lecture) GetList(ctx context.Context, request *api.GetListRequest) (*api.GetListResponse, error) {
 
-	lectures, err := models.GetLectureList(request.GetCourseId(), request.GetShowDeleted(), request.GetLimit(), request.GetOffset())
+	lectures, err := repositories.GetLectureList(request.GetCourseId(), request.GetShowDeleted(), request.GetLimit(), request.GetOffset())
 	if err != nil {
 		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
@@ -138,18 +133,12 @@ func (l *Lecture) GetList(ctx context.Context, request *api.GetListRequest) (*ap
 			Number:      lecture.Number,
 			Title:       lecture.Title,
 			Description: lecture.Description,
+			CreatedAt:   timestamppb.New(lecture.CreatedAt),
 			CreatedBy:   lecture.CreatedBy,
+			UpdatedAt:   timestamppb.New(lecture.UpdatedAt),
 			UpdatedBy:   lecture.UpdatedBy,
 			DeletedBy:   lecture.DeletedBy,
 		}
-
-		if !lecture.CreatedAt.IsZero() {
-			lercureResponse.CreatedAt = timestamppb.New(lecture.CreatedAt)
-		}
-
-		// if !lecture.UpdatedAt.IsZero() {
-		lercureResponse.UpdatedAt = timestamppb.New(lecture.UpdatedAt)
-		// }
 
 		if !lecture.DeletedAt.IsZero() {
 			lercureResponse.DeletedAt = timestamppb.New(lecture.DeletedAt)

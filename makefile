@@ -1,5 +1,5 @@
 all:
-	@echo "test"
+	@echo "Hello"
 	
 protogen: 	
 	protoc -I api/proto --go_out=. --go-grpc_out=. api/proto/lecture.proto

@@ -1,8 +1,8 @@
-package models
+package repositories
 
 import (
 	"errors"
-	"golang-united-lectures/internal/database"
+	"golang-united-lectures/pkg/database"
 	"log"
 	"time"
 )
@@ -15,7 +15,7 @@ type Lecture struct {
 	Description string
 	CreatedAt   time.Time
 	CreatedBy   string
-	UpdatedAt   time.Time `gorm:"default:null"`
+	UpdatedAt   time.Time
 	UpdatedBy   string
 	DeletedAt   time.Time `gorm:"default:null"`
 	DeletedBy   string

@@ -1,29 +1,25 @@
 package main
 
 import (
-	"golang-united-lectures/internal/api"
-	"golang-united-lectures/internal/database"
-	"golang-united-lectures/internal/lecture"
-	"golang-united-lectures/internal/models"
+	"golang-united-lectures/config"
+	"golang-united-lectures/pkg/api"
+	"golang-united-lectures/pkg/database"
+	"golang-united-lectures/pkg/repositories"
+	"golang-united-lectures/pkg/service"
 	"log"
 	"net"
-	"os"
 
 	"google.golang.org/grpc"
 )
 
-const protocol_tcp = "tcp"
-const port_8080 = ":8080"
-
 func main() {
 
-	dbHost := os.Getenv("LECTURES_DB_HOST")
-	dbPort := os.Getenv("LECTURES_DB_PORT")
-	dbUser := os.Getenv("LECTURES_DB_USER")
-	dbPassword := os.Getenv("LECTURES_DB_PASSWORD")
-	dbName := os.Getenv("LECTURES_DB_NAME")
+	err := config.Get()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	err := database.New(dbHost, dbPort, dbUser, dbPassword, dbName)
+	err = database.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,18 +31,18 @@ func main() {
 
 	defer sqlDB.Close()
 
-	err = database.DB.AutoMigrate(&models.Lecture{})
+	err = database.DB.AutoMigrate(&repositories.Lecture{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	grpcServer := grpc.NewServer()
 
-	lectureServer := &lecture.Lecture{}
+	lectureServer := &service.Lecture{}
 
 	api.RegisterLectureServer(grpcServer, lectureServer)
 
-	listener, err := net.Listen(protocol_tcp, port_8080)
+	listener, err := net.Listen(config.PROTOCOL_TCP, config.PORT_8080)
 	if err != nil {
 		log.Fatal(err)
 	}
