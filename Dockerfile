@@ -1,13 +1,10 @@
-FROM golang:alpine
-
+FROM golang:alpine as build
 WORKDIR /go/src/golang-united-lectures  
-
 COPY . .
-
 RUN go mod download
-RUN go mod verify
 RUN go build -o ./server ./cmd/main.go
 
-EXPOSE 8080
-
-CMD ["/go/src/golang-united-lectures/server"]
+FROM alpine
+WORKDIR .
+COPY --from=build /go/src/golang-united-lectures/server ./server
+CMD ["./server"]

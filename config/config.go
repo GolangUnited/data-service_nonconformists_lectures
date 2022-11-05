@@ -6,7 +6,7 @@ import (
 )
 
 const PROTOCOL_TCP = "tcp"
-const PORT_8080 = ":8080"
+const PORT_8080 = "8080"
 
 var DB_HOST string
 var DB_PORT string

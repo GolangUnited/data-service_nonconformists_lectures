@@ -12,7 +12,7 @@ service Lecture {
     rpc Get(GetRequest) returns (GetResponse){ }
     rpc Update(UpdateRequest) returns (google.protobuf.Empty){ }
     rpc Delete(DeleteRequest) returns (google.protobuf.Empty){ }
-    rpc GetList(GetListRequest) returns (GetListResponse){ }
+    rpc GetList(ListRequest) returns (ListResponse){ }
 }
 
 message CreateRequest {
@@ -59,13 +59,13 @@ message UpdateRequest {
    string deleted_by = 2;
  }
 
-message GetListRequest {
+message ListRequest {
    string course_id = 1;
    bool show_deleted = 2;
    uint32 limit = 3;
    uint32 offset = 4;
 }
 
-message GetListResponse {
+message ListResponse {
    repeated GetResponse lectures = 1;
 }

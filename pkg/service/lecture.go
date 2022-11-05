@@ -114,14 +114,14 @@ func (l *Lecture) Delete(ctx context.Context, request *api.DeleteRequest) (*empt
 
 }
 
-func (l *Lecture) GetList(ctx context.Context, request *api.GetListRequest) (*api.GetListResponse, error) {
+func (l *Lecture) GetList(ctx context.Context, request *api.ListRequest) (*api.ListResponse, error) {
 
 	lectures, err := repositories.GetLectureList(request.GetCourseId(), request.GetShowDeleted(), request.GetLimit(), request.GetOffset())
 	if err != nil {
 		return nil, status.New(codes.Internal, err.Error()).Err()
 	}
 
-	response := &api.GetListResponse{}
+	response := &api.ListResponse{}
 
 	response.Lectures = make([]*api.GetResponse, 0, len(*lectures))
 

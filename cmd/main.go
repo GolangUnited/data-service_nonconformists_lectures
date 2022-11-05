@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"golang-united-lectures/config"
 	"golang-united-lectures/pkg/api"
 	"golang-united-lectures/pkg/database"
@@ -42,7 +43,7 @@ func main() {
 
 	api.RegisterLectureServer(grpcServer, lectureServer)
 
-	listener, err := net.Listen(config.PROTOCOL_TCP, config.PORT_8080)
+	listener, err := net.Listen(config.PROTOCOL_TCP, fmt.Sprintf(":%s", config.PORT_8080))
 	if err != nil {
 		log.Fatal(err)
 	}

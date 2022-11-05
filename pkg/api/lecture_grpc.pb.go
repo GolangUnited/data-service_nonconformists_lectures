@@ -27,7 +27,7 @@ type LectureClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetList(ctx context.Context, in *GetListRequest, opts ...grpc.CallOption) (*GetListResponse, error)
+	GetList(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 }
 
 type lectureClient struct {
@@ -74,8 +74,8 @@ func (c *lectureClient) Delete(ctx context.Context, in *DeleteRequest, opts ...g
 	return out, nil
 }
 
-func (c *lectureClient) GetList(ctx context.Context, in *GetListRequest, opts ...grpc.CallOption) (*GetListResponse, error) {
-	out := new(GetListResponse)
+func (c *lectureClient) GetList(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+	out := new(ListResponse)
 	err := c.cc.Invoke(ctx, "/api.Lecture/GetList", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ type LectureServer interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Update(context.Context, *UpdateRequest) (*emptypb.Empty, error)
 	Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error)
-	GetList(context.Context, *GetListRequest) (*GetListResponse, error)
+	GetList(context.Context, *ListRequest) (*ListResponse, error)
 	mustEmbedUnimplementedLectureServer()
 }
 
@@ -111,7 +111,7 @@ func (UnimplementedLectureServer) Update(context.Context, *UpdateRequest) (*empt
 func (UnimplementedLectureServer) Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedLectureServer) GetList(context.Context, *GetListRequest) (*GetListResponse, error) {
+func (UnimplementedLectureServer) GetList(context.Context, *ListRequest) (*ListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetList not implemented")
 }
 func (UnimplementedLectureServer) mustEmbedUnimplementedLectureServer() {}
@@ -200,7 +200,7 @@ func _Lecture_Delete_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 func _Lecture_GetList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetListRequest)
+	in := new(ListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func _Lecture_GetList_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/api.Lecture/GetList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LectureServer).GetList(ctx, req.(*GetListRequest))
+		return srv.(LectureServer).GetList(ctx, req.(*ListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
