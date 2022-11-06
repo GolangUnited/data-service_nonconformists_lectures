@@ -17,7 +17,7 @@ type Lecture struct {
 	CreatedBy   string
 	UpdatedAt   time.Time
 	UpdatedBy   string
-	DeletedAt   time.Time `gorm:"default:null"`
+	DeletedAt   time.Time
 	DeletedBy   string
 }
 
@@ -90,7 +90,7 @@ func GetLectureList(courseId string, showDeleted bool, limit uint32, offset uint
 	}
 
 	if !showDeleted {
-		query.Where("deleted_at IS NULL")
+		query.Where("deleted_at = '0001-01-01 00:00:00+00'")
 	}
 
 	query.Order("created_at asc")
