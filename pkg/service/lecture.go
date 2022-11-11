@@ -114,7 +114,7 @@ func (l *Lecture) Delete(ctx context.Context, request *api.DeleteRequest) (*empt
 
 }
 
-func (l *Lecture) GetList(ctx context.Context, request *api.ListRequest) (*api.ListResponse, error) {
+func (l *Lecture) List(ctx context.Context, request *api.ListRequest) (*api.ListResponse, error) {
 
 	lectures, err := repositories.GetLectureList(request.GetCourseId(), request.GetShowDeleted(), request.GetLimit(), request.GetOffset())
 	if err != nil {

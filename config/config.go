@@ -20,7 +20,7 @@ func Get() error {
 	DB_PORT = os.Getenv("LECTURES_DB_PORT")
 	DB_USER = os.Getenv("LECTURES_DB_USER")
 	DB_PASSWORD = os.Getenv("LECTURES_DB_PASSWORD")
-	DB_DATABASE = os.Getenv("LECTURES_DB_NAME")
+	DB_DATABASE = os.Getenv("LECTURES_DB_DATABASE")
 
 	if DB_HOST == "" {
 		return errors.New("env varialble lectures_db_host has not filled")
