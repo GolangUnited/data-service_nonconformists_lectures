@@ -6,7 +6,6 @@ import (
 	"golang-united-lectures/pkg/repositories"
 	"time"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -20,7 +19,6 @@ type Lecture struct {
 func (l *Lecture) Create(ctx context.Context, request *api.CreateRequest) (*api.CreateResponse, error) {
 
 	lecture := &repositories.Lecture{
-		Id:          uuid.New().String(),
 		CourseId:    request.GetCourseId(),
 		Number:      request.GetNumber(),
 		Title:       request.GetTitle(),

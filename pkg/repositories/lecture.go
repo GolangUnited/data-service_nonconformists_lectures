@@ -8,7 +8,7 @@ import (
 )
 
 type Lecture struct {
-	Id          string `gorm:"primarykey"`
+	Id          string `gorm:"type:uuid;primarykey;default:gen_random_uuid()"`
 	CourseId    string `gorm:"index"`
 	Number      uint64
 	Title       string
