@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "./pkg/api"; 
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service Lecture {
+    rpc Create(CreateRequest) returns (CreateResponse){ }
+    rpc Get(GetRequest) returns (GetResponse){ }
+    rpc Update(UpdateRequest) returns (google.protobuf.Empty){ }
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty){ }
+    rpc List(ListRequest) returns (ListResponse){ }
+}
+
+message CreateRequest {
+   string course_id = 1; 
+   uint64 number = 2;
+   string title = 3;
+   string description = 4;
+   string created_by = 5;
+}
+
+message CreateResponse {
+   string id = 1;
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message GetResponse {
+   string id = 1;
+   string course_id = 2;
+   uint64 number = 3;
+   string title = 4;
+   string description = 5;
+   string created_by = 6;
+   google.protobuf.Timestamp created_at = 7;
+   string updated_by = 8;
+   google.protobuf.Timestamp updated_at = 9;
+   string deleted_by = 10;
+   google.protobuf.Timestamp deleted_at = 11;
+}
+
+message UpdateRequest {
+   string id = 1;
+   string course_id = 2;
+   uint64 number = 3;
+   string title = 4;
+   string description = 5;
+   string updated_by = 6;
+ }
+
+ message DeleteRequest {
+   string id = 1;
+   string deleted_by = 2;
+ }
+
+message ListRequest {
+   string course_id = 1;
+   bool show_deleted = 2;
+   uint32 limit = 3;
+   uint32 offset = 4;
+}
+
+message ListResponse {
+   repeated GetResponse lectures = 1;
+}
